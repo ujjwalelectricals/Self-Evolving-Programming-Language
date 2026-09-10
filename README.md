@@ -6,9 +6,29 @@ The implementation is intentionally dependency-free. The compiler toolchain is w
 
 ## Current status
 
-### Phase 1 — Language foundation ✅
+### Phase 1 — Lexer ✅
 
-Phase 1 establishes the front-end contract that every later compiler stage will rely on:
+The front end tokenizes EVO source with identifiers/keywords, numbers, strings, comments, operators, punctuation, source locations, and deterministic lexer errors.
+
+### Phase 2 — Parser + AST ✅
+
+Tokens are now parsed into a typed abstract syntax tree using a recursive-descent parser. Phase 2 supports:
+
+- variable declarations: `let name = expression;`
+- assignments
+- function declarations and parameters
+- return statements
+- `if` / `else`
+- `while`
+- blocks
+- unary minus
+- arithmetic and comparison precedence
+- grouping with parentheses
+- named function calls with arguments
+- deterministic parser errors with source locations
+- a stable AST printer for compiler debugging
+
+Pipeline:
 
 ```text
 EVO source
@@ -16,24 +36,10 @@ EVO source
 Lexer
    ↓
 Tokens
-```
-
-The lexer currently understands:
-
-- identifiers and keywords
-- integer and decimal numbers
-- strings with common escapes
-- `//` comments
-- arithmetic operators
-- assignment and comparison operators
-- parentheses, braces, commas and semicolons
-- source line/column tracking
-- deterministic error reporting for invalid characters, escapes and unterminated strings
-
-Supported keywords:
-
-```text
-let fn return if else while true false
+   ↓
+Parser
+   ↓
+AST
 ```
 
 Example:
@@ -46,7 +52,7 @@ fn add(a, b) {
     return a + b;
 }
 
-if answer >= 42 {
+if (answer >= 42) {
     print(message);
 }
 ```
@@ -64,16 +70,22 @@ Build:
 .\build.ps1
 ```
 
-Run the lexer self-test:
+Run lexer + parser regression tests:
 
 ```powershell
-.\run-tests.ps1
+powershell -ExecutionPolicy Bypass -File .\run-tests.ps1
 ```
 
-Lex an EVO program:
+Lex a program:
 
 ```powershell
 java -cp .\out evo.lang.Evo lex .\examples\hello.evo
+```
+
+Parse and print its AST:
+
+```powershell
+java -cp .\out evo.lang.Evo parse .\examples\hello.evo
 ```
 
 Show version:
@@ -86,8 +98,8 @@ java -cp .\out evo.lang.Evo version
 
 ```text
 Phase 1   Lexer                         ✅
-Phase 2   Parser + AST                  🚧
-Phase 3   Semantic analysis
+Phase 2   Parser + AST                  ✅
+Phase 3   Semantic analysis             🚧
 Phase 4   Bytecode / IR
 Phase 5   Virtual machine
 Phase 6   Baseline optimizer
@@ -97,7 +109,7 @@ Phase 9   Evolution/search engine
 Phase 10  Self-improving optimization
 ```
 
-The important distinction is that EVO will not claim to be “self-evolving” merely because it has a genetic algorithm. The end goal is measurable: generate or select optimization strategies, benchmark them against reproducible programs, keep strategies that improve the objective, and prevent regressions with correctness tests.
+EVO will not claim to be “self-evolving” merely because it has a genetic algorithm. The end goal is measurable: generate or select optimization strategies, benchmark them against reproducible programs, keep strategies that improve the objective, and prevent regressions with correctness tests.
 
 ## Design principles
 
@@ -116,9 +128,12 @@ src/
     TokenType.java
     Token.java
     Lexer.java
+    Parser.java
+    AstPrinter.java
     Evo.java
   test/java/evo/lang/
     LexerSelfTest.java
+    ParserSelfTest.java
 examples/
   hello.evo
 build.ps1
