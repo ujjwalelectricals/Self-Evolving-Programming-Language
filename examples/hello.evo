@@ -1,4 +1,4 @@
-// EVO Phase 1 example
+// EVO Phase 2 example
 let answer = 42;
 let message = "Hello from EVO";
 
@@ -6,6 +6,6 @@ fn add(a, b) {
     return a + b;
 }
 
-if answer >= 42 {
+if (answer >= 42) {
     print(message);
 }
